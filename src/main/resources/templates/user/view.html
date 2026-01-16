@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Ticket Details – HIMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/assets/logo.jpeg" type="image/svg+xml">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#2563eb"
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+ 
+        /* Updated Sidebar Item Style */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .nav-item:hover { background: #f1f5f9; }
+    </style>
+</head>
+ 
+<body class="bg-slate-50 text-gray-900 flex">
+ 
+<aside class="fixed top-0 left-0 w-64 h-full bg-white border-r flex flex-col z-40">
+  <div class="p-6 border-b flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+      <i data-lucide="shield" class="text-white"></i>
+    </div>
+    <div>
+      <p class="font-bold text-lg leading-tight">GENC HIMS</p>
+      <p class="text-xs text-gray-500">User Portal</p>
+    </div>
+  </div>
+ 
+  <nav class="flex-1 p-4 space-y-1">
+    <div onclick="go('/user/dashboard')" class="nav-item text-gray-600"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</div>
+    <div onclick="go('/user/policies')" class="nav-item text-gray-600"><i data-lucide="file-text" class="w-5 h-5"></i> My Policies</div>
+    <div onclick="go('/user/claims')" class="nav-item text-gray-600"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Claims</div>
+    <div onclick="go('/user/payments')" class="nav-item text-gray-600"><i data-lucide="credit-card" class="w-5 h-5"></i> Payments</div>
+    
+    <div onclick="go('/user/support')" class="nav-item bg-primary/10 text-primary font-semibold">
+        <i data-lucide="headphones" class="w-5 h-5"></i> Support
+    </div>
+    
+    <div onclick="go('/user/profile')" class="nav-item text-gray-600"><i data-lucide="user" class="w-5 h-5"></i> Profile</div>
+  </nav>
+ 
+  <div class="p-4 border-t">
+    <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors">
+      <i data-lucide="log-out" class="w-5 h-5"></i> Logout
+    </button>
+  </div>
+</aside>
+ 
+<main class="ml-64 flex-1 p-12">
+    
+    <div class="flex items-center justify-between mb-10">
+        <div class="flex items-center gap-4">
+            <a th:href="@{/user/support}" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <i data-lucide="arrow-left" class="w-6 h-6 text-slate-500 hover:text-primary"></i>
+            </a>
+            <h1 class="text-4xl font-bold text-slate-900 tracking-tight" th:text="'Ticket TKT-2025-' + ${ticket.id}">Ticket Details</h1>
+        </div>
+        
+        <span th:text="${ticket.ticketStatus}"
+              th:classappend="${ticket.ticketStatus == 'OPEN' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}"
+              class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest">
+        </span>
+    </div>
+ 
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-2 space-y-6">
+            
+            <div class="bg-white border border-slate-200 rounded-[32px] p-8 shadow-sm">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center font-bold text-primary text-xl"
+                         th:text="${#strings.substring(ticket.user.username,0,1).toUpperCase()}">U</div>
+                    <div>
+                        <p class="font-bold text-slate-900 text-lg" th:text="${ticket.user.username}">Username</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide" th:text="${#temporals.format(ticket.createdDate, 'MMM dd, HH:mm')}">Date</p>
+                    </div>
+                </div>
+                <p class="text-slate-600 leading-relaxed font-medium text-base" th:text="${ticket.issueDescription}"></p>
+            </div>
+ 
+            <div th:each="resp : ${responses}" class="flex flex-col space-y-2 mb-6 items-start">
+                <div class="max-w-[90%] rounded-[24px] p-6 shadow-sm border border-slate-200 bg-white">
+                    <div class="flex items-center gap-2 mb-3 text-xs font-bold text-slate-400 uppercase tracking-wide">
+                        <span class="text-slate-700" th:text="${resp.responder.username}">Agent Name</span>
+                        
+                        <span class="px-2 py-0.5 bg-green-50 text-green-700 rounded-full text-[10px] border border-green-100"
+                              th:if="${resp.responder.role != 'USER'}">SUPPORT TEAM</span>
+                        
+                        <span>•</span>
+                        <span th:text="${#temporals.format(resp.createdAt, 'MMM dd, HH:mm')}">Time</span>
+                    </div>
+                    <p class="text-slate-600 font-medium leading-relaxed" th:text="${resp.message}"></p>
+                </div>
+            </div>
+ 
+            <div class="bg-blue-50 border border-blue-100 rounded-[24px] p-6 text-sm text-blue-700 flex gap-4 items-start font-medium leading-relaxed">
+                <i data-lucide="info" class="w-5 h-5 mt-0.5 shrink-0"></i>
+                <div>
+                    <p class="font-bold text-blue-900 mb-1">Response Policy</p>
+                    <p>This ticket is managed by our support team. Our agent or administrator will respond shortly.</p>
+                </div>
+            </div>
+        </div>
+ 
+        <div class="space-y-6">
+            <div class="bg-white border border-slate-200 rounded-[32px] p-8 shadow-sm h-fit">
+                <h2 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <div class="p-2 bg-primary/10 rounded-lg text-primary"><i data-lucide="info" class="w-5 h-5"></i></div>
+                    Ticket Information
+                </h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Subject</p>
+                        <p class="font-bold text-slate-700" th:text="${ticket.subject}">Subject Line</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Category</p>
+                            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wide border border-slate-200"
+                                  th:text="${ticket.category}">Category</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Priority</p>
+                            <span th:text="${ticket.priority}"
+                                  th:classappend="${ticket.priority == 'High' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-amber-50 text-amber-600 border-amber-100'}"
+                                  class="px-3 py-1 text-xs rounded-lg font-bold border uppercase tracking-wide">Priority</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Date Created</p>
+                        <p class="font-bold text-slate-700"
+                           th:text="${#temporals.format(ticket.createdDate, 'EEEE, MMM dd, yyyy')}">Date</p>
+                    </div>
+                </div>
+ 
+                <div th:if="${ticket.ticketStatus != 'RESOLVED'}" class="mt-8 pt-6 border-t border-slate-100">
+                    <form th:action="@{'/support/' + ${ticket.id} + '/resolve'}" method="POST">
+                        <button type="submit"
+                                class="w-full py-4 bg-emerald-500 text-white rounded-2xl font-bold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                            Mark as Resolved
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+ 
+<script>
+    function go(path) { window.location.href = path; }
+    function logout() { window.location.href = '/logout'; }
+    lucide.createIcons();
+</script>
+</body>
+</html>

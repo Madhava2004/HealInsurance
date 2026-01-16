@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Analytics – Admin</title>
+   <link rel="icon" href="/assets/logo.jpeg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { sidebar: "#0f172a", bg: "#f8fafc", card: "#ffffff", border: "#e5e7eb", muted: "#64748b", primary: "#2563eb" } } }
+    }
+  </script>
+  <style>
+     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-primary { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    .kpi-card { background: white; border: 1px solid #e5e7eb; padding: 20px; border-radius: 16px; position: relative; transition:all 0.3s ease;}
+    .kpi-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .clickable-card { cursor: pointer; }
+    .dot { width: 10px; height: 10px; border-radius: 999px; }
+    .icon-bubble { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body class="bg-bg text-slate-900 flex">
+ 
+<aside class="fixed inset-y-0 left-0 w-64 bg-sidebar text-white flex flex-col z-40">
+  <div class="p-6 flex items-center gap-3">
+    <div class="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
+      <i data-lucide="shield"></i>
+    </div>
+   <div>
+      <h1 class="font-bold leading-tight">GENC HIMS</h1>
+      <p class="text-xs text-white/60">Admin Portal</p>
+    </div>
+  </div>
+ 
+  <nav class="px-4 space-y-1 flex-1">
+    <button onclick="go('/admin/dashboard')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="layout-dashboard"></i> Dashboard
+    </button>
+    <button onclick="go('/admin/users')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="users"></i> Users
+    </button>
+    <button onclick="go('/admin/policies')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="file-text"></i> Policies
+    </button>
+    <button onclick="go('/admin/claims')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="clipboard-list"></i> Claims
+    </button>
+    <button onclick="go('/admin/support')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="headphones"></i> Support
+    </button>
+    <button onclick="go('/admin/analytics')" class="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 transition">
+      <i data-lucide="bar-chart-3"></i> Analytics
+    </button>
+    <button onclick="go('/admin/profile')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="user"></i> <span>Profile</span>
+    </button>
+  </nav>
+ 
+<div class="p-4 border-t border-white/10">
+    <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 font-semibold transition">
+      <i data-lucide="log-out"></i>Logout
+    </button>
+  </div>
+</aside>
+ 
+<main class="ml-64 flex-1 p-8">
+  <div class="mb-8 flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-bold">Analytics</h1>
+        <p class="text-muted text-sm mt-1">Insights and performance metrics</p>
+    </div>
+    <div class="flex gap-3">
+        <button onclick="location.reload()" class="flex items-center gap-2 px-4 py-2 bg-white border border-border rounded-xl text-sm font-medium hover:bg-slate-50 transition-all shadow-sm">
+            <i data-lucide="refresh-cw" class="w-4 h-4 text-slate-600"></i> Refresh
+        </button>
+        <button onclick="exportToCSV()" class="flex items-center gap-2 px-4 py-2 bg-sidebar text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-all shadow-sm">
+            <i data-lucide="download" class="w-4 h-4"></i> Export
+        </button>
+    </div>
+  </div>
+ 
+  <div class="grid grid-cols-4 gap-6 mb-8">
+    <div class="kpi-card clickable-card flex items-center justify-between shadow-sm" onclick="location.href='/admin/users'">
+      <div><p class="text-sm text-muted font-medium">Total Users</p><h2 id="totalUsersVal" class="text-3xl font-bold mt-1" th:text="${totalUsers}">0</h2></div>
+      <div class="icon-bubble bg-blue-50 text-blue-600"><i data-lucide="users"></i></div>
+    </div>
+ 
+    <div class="kpi-card clickable-card flex items-center justify-between shadow-sm" onclick="location.href='/admin/policies'">
+      <div><p class="text-sm text-muted font-medium">Active Policies</p><h2 id="activePoliciesVal" class="text-3xl font-bold mt-1" th:text="${activePolicies}">0</h2></div>
+      <div class="icon-bubble bg-emerald-50 text-emerald-600"><i data-lucide="file-text"></i></div>
+    </div>
+ 
+    <div class="kpi-card clickable-card flex items-center justify-between shadow-sm" onclick="location.href='/admin/claims'">
+      <div><p class="text-sm text-muted font-medium">Claims Processed</p><h2 id="claimsProcessedVal" class="text-3xl font-bold mt-1" th:text="${claimsProcessed}">0</h2></div>
+      <div class="icon-bubble bg-amber-50 text-amber-600"><i data-lucide="clipboard-list"></i></div>
+    </div>
+ 
+    <div class="kpi-card flex items-center justify-between shadow-sm">
+      <div><p class="text-sm text-muted font-medium">Approved Amount</p><h2 id="revenueVal" class="text-3xl font-bold mt-1" th:text="'₹' + ${revenue}">0</h2></div>
+ 
+    </div>
+  </div>
+ 
+  <div class="flex gap-6 mb-8">  
+    <div class="bg-card border rounded-2xl p-6 shadow-sm w-1/2">
+      <h3 class="font-semibold mb-6 text-slate-700">Claims by Status</h3>
+      <div style="height: 250px; position: relative;">
+        <canvas id="claimsChart" th:data-p="${pendingCount}" th:data-a="${approvedCount}" th:data-r="${rejectedCount}"></canvas>
+      </div>
+      <div class="flex justify-center gap-6 mt-8 text-sm font-medium text-slate-500">
+        <span class="flex items-center gap-2"><span class="dot bg-amber-500"></span>Pending</span>
+        <span class="flex items-center gap-2"><span class="dot bg-emerald-500"></span>Approved</span>
+        <span class="flex items-center gap-2"><span class="dot bg-red-500"></span>Rejected</span>
+      </div>
+    </div>
+ 
+    </div>
+ 
+</main>
+ 
+<script>
+  lucide.createIcons();
+ 
+  function go(url) { window.location.href = url; }
+  function logout() { location.href = '/logout'; }
+ 
+ 
+  // Claims Chart
+  const ctx = document.getElementById("claimsChart");
+  const p = parseInt(ctx.getAttribute('data-p')) || 0;
+  const a = parseInt(ctx.getAttribute('data-a')) || 0;
+  const r = parseInt(ctx.getAttribute('data-r')) || 0;
+  const total = p + a + r;
+ 
+  new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: ["Pending", "Approved", "Rejected"],
+      datasets: [{
+        data: total === 0 ? [1, 0, 0] : [p, a, r],
+        backgroundColor: total === 0 ? ["#f1f5f9"] : ["#f59e0b", "#10b981", "#ef4444"],
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } }
+    }
+  });
+  
+  function exportToCSV() {
+    const totalUsers = document.getElementById("totalUsersVal")?.innerText || "0";
+    const activePolicies = document.getElementById("activePoliciesVal")?.innerText || "0";
+    const claimsProcessed = document.getElementById("claimsProcessedVal")?.innerText || "0";
+    const revenue = document.getElementById("revenueVal")?.innerText || "$0";
+ 
+    const rows = [
+      ["Metric", "Current Value"],
+      ["Total Users", totalUsers],
+      ["Active Policies", activePolicies],
+      ["Claims Processed", claimsProcessed],
+      ["Total Revenue", revenue.replace('$', '').trim()]
+    ];
+ 
+    let csvContent = "data:text/csv;charset=utf-8,"
+      + rows.map(e => e.join(",")).join("\n");
+ 
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "HIMS_Analytics_Report.csv");
+    document.body.appendChild(link);
+    
+    link.click();
+    document.body.removeChild(link);
+  }
+</script>
+</body>
+</html>

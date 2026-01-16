@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIMS Agent Portal - Dashboard</title>
+    <link rel="icon" href="/assets/logo.jpeg" type="image/svg+xml">
+ 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+ 
+    .gradient-primary { background: linear-gradient(135deg, #10b981, #059669); }
+    
+    /* UPDATED NAV BUTTON STYLES FOR WHITE SIDEBAR */
+    .nav-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        transition: all 0.15s ease;
+        color: #64748b; /* Slate 500 */
+        font-weight: 500;
+    }
+    
+    .nav-btn:hover {
+        background: #f1f5f9; /* Slate 100 */
+        color: #0f172a; /* Slate 900 */
+    }
+    
+    .nav-btn.active {
+        background: #ecfdf5; /* Emerald 50 */
+        color: #059669; /* Emerald 600 */
+        font-weight: 600;
+    }
+ 
+    .replica-card {
+        background: white;
+        border-radius: 2rem;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+ 
+    .hims-input {
+        width: 100%; padding: 0.75rem 1rem; background: #ffffff; border: 1px solid #e2e8f0;
+        border-radius: 0.75rem; font-size: 0.875rem; transition: all 0.2s; outline: none;
+    }
+    .hims-input:focus { border-color: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+    
+    .hims-input:disabled {
+        background-color: #f8fafc;
+        color: #64748b;
+        cursor: not-allowed;
+        border-color: #e2e8f0;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+ 
+<header id="mobileHeader" class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-30 lg:hidden">
+  <a href="#" class="flex items-center gap-3 rounded-xl">
+    <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center">
+      <i data-lucide="shield" class="w-5 h-5 text-white"></i>
+    </div>
+    <span class="text-lg font-bold text-gray-900">HIMS Agent</span>
+  </a>
+  <button onclick="toggleSidebar(true)" class="p-2 rounded-lg hover:bg-gray-100">
+    <i data-lucide="menu" class="w-6 h-6"></i>
+  </button>
+</header>
+ 
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleSidebar(false)"></div>
+ 
+<aside id="agentSidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col z-50 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0">
+  <div class="p-6 flex items-center gap-3">
+    <div class="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
+      <i data-lucide="shield" class="text-white"></i>
+    </div>
+    <div>
+      <h1 class="font-bold leading-tight text-slate-900">GENC HIMS</h1>
+      <p class="text-xs text-slate-500">Agent Portal</p>
+    </div>
+    <button onclick="toggleSidebar(false)" class="lg:hidden ml-auto p-2 rounded-lg hover:bg-slate-100"><i data-lucide="x" class="w-5 h-5"></i></button>
+  </div>
+ 
+  <nav class="px-4 space-y-1 flex-1">
+    <a th:href="@{/agent/dashboard}" class="nav-btn active"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a th:href="@{/agent/policies}" class="nav-btn"><i data-lucide="file-text"></i> Policies</a>
+    <a th:href="@{/agent/claims}" class="nav-btn"><i data-lucide="clipboard-list"></i> Claims</a>
+    <a th:href="@{/agent/customers}" class="nav-btn"><i data-lucide="users"></i> Customers</a>
+    <a th:href="@{/agent/support}" class="nav-btn"><i data-lucide="headphones"></i> Support</a>
+    <a th:href="@{/agent/profile}" class="nav-btn"><i data-lucide="user"></i><span>Profile</span></a>
+  </nav>
+ 
+  <div class="p-4 border-t border-slate-100">
+    <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 font-semibold transition-colors">
+      <i data-lucide="log-out"></i>Logout
+    </button>
+  </div>
+</aside>
+ 
+<main class="lg:ml-64 p-4 sm:p-6 xl:p-8 pt-20 lg:pt-8 max-w-[1600px] mx-auto">
+    
+    <header class="flex items-center gap-4 mb-8">
+        <div class="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-100">
+            <i data-lucide="trending-up" class="text-white w-7 h-7"></i>
+        </div>
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900">Agent Dashboard</h1>
+            <p class="text-slate-400 text-sm font-medium">Overview of your performance and pending tasks</p>
+        </div>
+    </header>
+ 
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div class="kpi-card bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex justify-between items-center">
+    <div>
+        <p class="text-sm text-slate-500 mb-1">Active Policies</p>
+        
+        <div class="text-4xl font-bold" th:text="${policies != null ? policies.size() : 0}">0</div>
+        
+        <p class="text-xs text-slate-400 mt-1">Managed by you</p>
+    </div>
+    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+        <i data-lucide="file-text" class="w-6 h-6 text-blue-600"></i>
+    </div>
+</div>
+        <div class="kpi-card bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex justify-between items-center">
+            <div>
+                <p class="text-sm text-slate-500 mb-1">Pending Claims</p>
+                <div class="text-4xl font-bold" th:text="${pendingClaimsCount}">0</div>
+                <p class="text-xs text-yellow-500 font-semibold mt-1">Requires review</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+                <i data-lucide="clock" class="w-6 h-6 text-yellow-500"></i>
+            </div>
+        </div>
+        <div class="kpi-card bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex justify-between items-center">
+            <div>
+                <p class="text-sm text-slate-500 mb-1">Processed</p>
+                <div class="text-4xl font-bold" th:text="${approved}">0</div>
+                <p class="text-xs text-emerald-500 font-semibold mt-1">Claims Approved</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center">
+                <i data-lucide="check-circle" class="w-6 h-6 text-emerald-600"></i>
+            </div>
+        </div>
+        <div class="kpi-card bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex justify-between items-center">
+            <div>
+                <p class="text-sm text-slate-500 mb-1">Declined</p>
+                <div class="text-4xl font-bold" th:text="${rejected}">0</div>
+                <p class="text-xs text-red-500 font-semibold mt-1">Claims Rejected</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
+                <i data-lucide="x-circle" class="w-6 h-6 text-red-500"></i>
+            </div>
+        </div>
+    </div>
+ 
+    <h3 class="text-xl font-bold mb-6 px-1">Quick Actions</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
+        <a th:href="@{/agent/claims}" class="block group">
+            <div class="bg-white p-6 sm:p-7 rounded-[28px] border border-slate-100 shadow-sm transition-all hover:border-emerald-500 hover:shadow-md flex flex-col justify-between min-h-[160px]">
+                <div class="w-14 h-14 bg-orange-500 text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-orange-100 group-hover:scale-110 transition">
+                    <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div><p class="font-bold text-slate-900">Review Claims</p><p class="text-sm text-slate-400">Go to Claims</p></div>
+                    <span class="text-2xl font-bold" th:text="${pendingClaimsCount}">0</span>
+                </div>
+            </div>
+        </a>
+        <a th:href="@{/agent/customers}" class="block group">
+            <div class="bg-white p-6 sm:p-7 rounded-[28px] border border-slate-100 shadow-sm transition-all hover:border-emerald-500 hover:shadow-md flex flex-col justify-between min-h-[160px]">
+                <div class="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-100 group-hover:scale-110 transition">
+                    <i data-lucide="users" class="w-6 h-6"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div><p class="font-bold text-slate-900">My Customers</p><p class="text-sm text-slate-400">View Details</p></div>
+                    <span class="text-2xl font-bold" th:text="${customersCount}">0</span>
+                </div>
+            </div>
+        </a>
+        <a th:href="@{/agent/policies}" class="block group">
+            <div class="bg-white p-6 sm:p-7 rounded-[28px] border border-slate-100 shadow-sm transition-all hover:border-emerald-500 hover:shadow-md flex flex-col justify-between min-h-[160px]">
+                <div class="w-14 h-14 bg-emerald-500 text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-emerald-100 group-hover:scale-110 transition">
+                    <i data-lucide="book-open" class="w-6 h-6"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div><p class="font-bold text-slate-900">Policy Assistance</p><p class="text-sm text-slate-400">Active Policies</p></div>
+                    <span class="text-2xl font-bold" th:text="${activePoliciesCount}">0</span>
+                </div>
+            </div>
+        </a>
+        <a th:href="@{/agent/support}" class="block group">
+            <div class="bg-white p-6 sm:p-7 rounded-[28px] border border-slate-100 shadow-sm transition-all hover:border-emerald-500 hover:shadow-md flex flex-col justify-between min-h-[160px]">
+                <div class="w-14 h-14 bg-purple-500 text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-purple-100 group-hover:scale-110 transition">
+                    <i data-lucide="alert-circle" class="w-6 h-6"></i>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div><p class="font-bold text-slate-900">Support</p><p class="text-sm text-slate-400">Open tickets</p></div>
+                    <span class="text-2xl font-bold" th:text="${openTicketsCount}">0</span>
+                </div>
+            </div>
+        </a>
+    </div>
+ 
+</main>
+ 
+<script>
+    function refreshIcons() { if (window.lucide) lucide.createIcons(); }
+    document.addEventListener("DOMContentLoaded", refreshIcons);
+ 
+    function toggleSidebar(show) {
+        const sidebar = document.getElementById('agentSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (!sidebar || !overlay) return;
+        if (show) { sidebar.classList.remove('-translate-x-full'); overlay.classList.remove('hidden'); overlay.classList.add('active'); }
+        else { sidebar.classList.add('-translate-x-full'); overlay.classList.add('hidden'); overlay.classList.remove('active'); }
+        refreshIcons();
+    }
+ 
+    function logout() { window.location.href = '/logout'; }
+</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Make Payment – HIMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" th:href="@{/assets/logo.jpeg}" type="image/svg+xml">
+ 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+ 
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { primary: "#2563eb" }
+        }
+      }
+    }
+  </script>
+ 
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+ 
+    /* Updated Sidebar Item Style */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .nav-item:hover { background: #f1f5f9; }
+  </style>
+</head>
+ 
+<body class="bg-slate-50 text-gray-900 flex">
+ 
+<aside class="fixed top-0 left-0 w-64 h-full bg-white border-r flex flex-col z-40">
+  <div class="p-6 border-b flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+      <i data-lucide="shield" class="text-white"></i>
+    </div>
+    <div>
+      <p class="font-bold text-lg leading-tight">GENC HIMS</p>
+      <p class="text-xs text-gray-500">User Portal</p>
+    </div>
+  </div>
+ 
+  <nav class="flex-1 p-4 space-y-1">
+    <div onclick="go('/user/dashboard')" class="nav-item text-gray-600"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</div>
+    <div onclick="go('/user/policies')" class="nav-item text-gray-600"><i data-lucide="file-text" class="w-5 h-5"></i> My Policies</div>
+    <div onclick="go('/user/claims')" class="nav-item text-gray-600"><i data-lucide="clipboard-list" class="w-5 h-5"></i> Claims</div>
+    
+    <div onclick="go('/user/payments')" class="nav-item bg-primary/10 text-primary font-semibold">
+        <i data-lucide="credit-card" class="w-5 h-5"></i> Payments
+    </div>
+    
+    <div onclick="go('/user/support')" class="nav-item text-gray-600"><i data-lucide="headphones" class="w-5 h-5"></i> Support</div>
+    <div onclick="go('/user/profile')" class="nav-item text-gray-600"><i data-lucide="user" class="w-5 h-5"></i> Profile</div>
+  </nav>
+ 
+  <div class="p-4 border-t">
+    <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors">
+      <i data-lucide="log-out" class="w-5 h-5"></i> Logout
+    </button>
+  </div>
+</aside>
+ 
+<main class="ml-64 flex-1 p-12">
+ 
+  <div class="flex items-center justify-between mb-10">
+    <div>
+      <h1 class="text-4xl font-bold text-slate-900 tracking-tight mb-2">Make Payment</h1>
+      <p class="text-slate-500 font-medium">Completing enrollment for <span class="text-primary font-bold" th:text="${plan.coverageType}">Plan Name</span></p>
+    </div>
+ 
+    <a th:href="@{/user/payments}"
+       class="inline-flex items-center px-6 py-3 border border-slate-200 bg-white rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
+      <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+      Cancel
+    </a>
+  </div>
+ 
+  <div class="grid lg:grid-cols-3 gap-8">
+ 
+    <div class="lg:col-span-2">
+      <form th:action="@{/user/payments/pay}" method="post" class="bg-white rounded-[32px] border border-slate-200 shadow-sm p-10 space-y-8">
+        
+        <input type="hidden" name="planId" th:value="${plan.id}" />
+ 
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 block">Selected Policy</label>
+          <div class="relative">
+             <i data-lucide="shield" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary"></i>
+             <input type="text" th:value="${plan.coverageType} + ' Insurance Plan'" readonly
+               class="w-full h-14 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-500 outline-none cursor-not-allowed" />
+          </div>
+        </div>
+ 
+        <div>
+          <label class="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">
+            Amount Due
+          </label>
+          <div class="relative">
+              <i data-lucide="indian-rupee" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+              <input type="number" name="amount" th:value="${plan.premiumAmount}" readonly
+                class="w-full h-14 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 outline-none cursor-not-allowed" />
+          </div>
+        </div>
+ 
+        <div class="border-t border-slate-100 pt-8">
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2 mb-6">
+            <div class="p-2 bg-primary/10 rounded-lg text-primary"><i data-lucide="credit-card" class="w-5 h-5"></i></div>
+            Card Information
+          </h3>
+ 
+          <div class="space-y-5">
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 block">Cardholder Name</label>
+              <input type="text" placeholder="Card Holder" class="w-full h-14 px-6 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-slate-700" />
+            </div>
+ 
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 block">Card Number</label>
+              <div class="relative">
+                <i data-lucide="credit-card" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                <input type="text" placeholder="0000 0000 0000 0000" class="w-full h-14 pl-12 pr-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-slate-700" />
+              </div>
+            </div>
+ 
+            <div class="grid grid-cols-2 gap-6">
+              <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 block">Expiry Date</label>
+                <div class="relative">
+                    <i data-lucide="calendar" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                    <input type="text" placeholder="MM/YY" class="w-full h-14 pl-12 pr-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-slate-700" />
+                </div>
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 block">CVV</label>
+                <div class="relative">
+                    <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                    <input type="password" placeholder="123" class="w-full h-14 pl-12 pr-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-slate-700" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+ 
+        <button type="submit" class="w-full py-4 bg-primary text-white rounded-2xl font-bold hover:bg-blue-700 flex items-center justify-center gap-2 shadow-xl shadow-blue-500/20 transition-all transform hover:-translate-y-1 active:scale-95">
+          <i data-lucide="lock" class="w-5 h-5"></i> Pay & Activate
+        </button>
+ 
+      </form>
+    </div>
+ 
+    <div>
+      <div class="bg-white rounded-[32px] border border-slate-200 shadow-sm p-8 sticky top-8">
+        <h3 class="text-xl font-bold text-slate-900 mb-6">Payment Summary</h3>
+        <div class="space-y-4 mb-8 text-sm">
+          <div class="flex justify-between font-medium">
+            <span class="text-slate-500">Premium Amount</span>
+            <span class="text-slate-900" th:text="${'₹ ' + plan.premiumAmount}">₹0.00</span>
+          </div>
+          <div class="flex justify-between font-medium">
+            <span class="text-slate-500">Processing Fee</span>
+            <span class="text-emerald-600 font-bold">Free</span>
+          </div>
+          <div class="border-t border-slate-100 pt-4 flex justify-between items-center">
+            <span class="font-bold text-slate-900 text-base">Total</span>
+            <span class="text-2xl font-bold text-primary" th:text="${'₹ ' + plan.premiumAmount}">₹0.00</span>
+          </div>
+        </div>
+        
+        <div class="space-y-4 text-xs font-bold text-slate-500 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+          <div class="flex items-center gap-3">
+              <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> Secure 256-bit SSL encryption
+          </div>
+          <div class="flex items-center gap-3">
+              <i data-lucide="zap" class="w-4 h-4 text-amber-500 fill-amber-500"></i> Instant Policy Activation
+          </div>
+        </div>
+      </div>
+    </div>
+ 
+  </div>
+</main>
+ 
+<script>
+  function go(p){ window.location.href = p }
+  function logout(){ window.location.href = '/logout' }
+  lucide.createIcons();
+</script>
+ 
+</body>
+</html>

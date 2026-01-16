@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Policies - HIMS Agent</title>
+    <link rel="icon" href="/assets/logo.jpeg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .bg-pattern {
+            background-image: radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.15) 0%, transparent 25%),
+                              radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.1) 0%, transparent 25%);
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+ 
+    <aside class="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 hidden lg:flex flex-col z-50">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center">
+                    <i data-lucide="shield" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <span class="text-lg font-bold text-gray-900">HIMS</span>
+                    <p class="text-xs text-gray-500">Agent Portal</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="flex-1 px-4 py-4">
+             <a th:href="@{/agent/customers}"
+               class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-all font-medium">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                <span>Back to List</span>
+            </a>
+            
+            <div class="mt-8 px-4">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Customer Actions</p>
+                <button onclick="document.getElementById('emailDialog').showModal()"
+                        class="flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all font-medium">
+                    <i data-lucide="mail" class="w-5 h-5"></i>
+                    <span>Send Reminder</span>
+                </button>
+            </div>
+        </nav>
+    </aside>
+ 
+    <main class="lg:ml-64 flex-1 p-4 sm:p-8">
+        
+        <header class="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <a th:href="@{/agent/customers}" class="lg:hidden p-2 -ml-2 text-slate-400">
+                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                    </a>
+                    <h1 class="text-3xl font-bold text-slate-900">Policy Portfolio</h1>
+                </div>
+                <p class="text-slate-500 font-medium">
+                    Managing policies for <span class="text-emerald-600 font-bold" th:text="${customer.username}">Customer Name</span>
+                </p>
+            </div>
+            
+            <div class="bg-white px-6 py-3 rounded-xl border border-slate-200 flex items-center gap-4 shadow-sm">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-lg shadow-sm"
+                     th:text="${customer.username != null ? customer.username.substring(0,1).toUpperCase() : 'U'}">U</div>
+                <div>
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Contact Details</p>
+                    <p class="text-sm font-bold text-slate-700" th:text="${customer.email}">email@example.com</p>
+                    <p class="text-xs text-slate-500" th:text="${customer.phone != null ? customer.phone : 'No phone linked'}">No phone</p>
+                </div>
+            </div>
+        </header>
+ 
+        <div th:if="${policies.empty}" class="bg-white p-12 rounded-2xl border border-slate-200 text-center shadow-sm">
+            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="file-x" class="w-8 h-8 text-slate-300"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">No Policies Found</h3>
+            <p class="text-slate-500 mb-6 max-w-sm mx-auto">This customer has not enrolled in any insurance plans yet.</p>
+            <a th:href="@{/agent/customers}" class="inline-flex items-center gap-2 text-emerald-600 font-bold hover:text-emerald-700 transition-colors">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i> Return to Customers
+            </a>
+        </div>
+ 
+        <div th:unless="${policies.empty}" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            
+            <div th:each="policy : ${policies}" class="bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
+                
+                <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 bg-pattern text-white relative">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="bg-white/20 backdrop-blur-md p-2 rounded-xl">
+                            <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <span th:classappend="${policy.status == 'ACTIVE' ? 'bg-green-400/30 text-green-50' : 'bg-amber-400/30 text-amber-50'}"
+                              class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-md border border-white/20"
+                              th:text="${policy.status}">ACTIVE</span>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold mb-1 tracking-tight" th:text="${policy.coverageType}">Gold Health Plan</h3>
+                    <p class="text-emerald-100 text-xs font-mono opacity-80" th:text="'ID: ' + ${policy.policyNumber}">#POL-883920</p>
+                    
+                    <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                </div>
+ 
+                <div class="p-6 flex-1 flex flex-col justify-between">
+                    
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <p class="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-1">Premium</p>
+                            <p class="text-2xl font-bold text-slate-900" th:text="'₹' + ${policy.premiumAmount}">₹150</p>
+                            <p class="text-[10px] text-slate-400">per month</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-1">Coverage</p>
+                            <p class="text-lg font-bold text-emerald-600" th:text="'₹' + ${policy.coverageAmount}">₹50k</p>
+                        </div>
+                    </div>
+ 
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 relative group-hover:border-emerald-100 transition-colors">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Next Premium Due</span>
+                            <i data-lucide="calendar" class="w-3 h-3 text-emerald-500"></i>
+                        </div>
+                        
+                        <div class="flex items-center gap-3">
+                             <div class="text-3xl font-bold text-slate-800 tracking-tight"
+                                  th:if="${policy.startDate != null}"
+                                  th:text="${#temporals.format(policy.startDate.plusYears(1), 'dd')}">
+                                 15
+                             </div>
+                             <div class="flex flex-col">
+                                 <span class="text-xs font-bold text-slate-600 uppercase"
+                                       th:if="${policy.startDate != null}"
+                                       th:text="${#temporals.format(policy.startDate.plusYears(1), 'MMM')}">AUG</span>
+                                 <span class="text-xs text-slate-400 font-medium"
+                                       th:if="${policy.startDate != null}"
+                                       th:text="${#temporals.format(policy.startDate.plusYears(1), 'yyyy')}">2025</span>
+                             </div>
+                             
+                             </div>
+                    </div>
+ 
+                </div>
+            </div>
+        </div>
+    </main>
+ 
+    <dialog id="emailDialog" class="p-0 rounded-2xl shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm">
+        <div class="bg-white p-6 w-[400px]">
+            <h3 class="text-lg font-bold mb-2">Send Reminder</h3>
+            <p class="text-sm text-slate-500 mb-6">Send an email to <span th:text="${customer.email}"></span>?</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="document.getElementById('emailDialog').close()" class="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-xl">Cancel</button>
+                <button onclick="sendEmail()" class="px-4 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-lg shadow-emerald-100">Send Now</button>
+            </div>
+        </div>
+    </dialog>
+ 
+    <script th:inline="javascript">
+        lucide.createIcons();
+ 
+        function sendEmail() {
+            // FIX: Added quotes to ensure the Thymeleaf value is treated as a string literal in JS
+            const email = '[[${customer.email}]]';
+            window.location.href = "mailto:" + email + "?subject=HIMS Policy Update";
+            document.getElementById('emailDialog').close();
+        }
+    </script>
+</body>
+</html>

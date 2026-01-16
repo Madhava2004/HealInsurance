@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claims Review - HIMS Agent Portal</title>
+    <link rel="icon" href="/assets/logo.jpeg" type="image/svg+xml">
+ 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+ 
+    .gradient-primary { background: linear-gradient(135deg, #10b981, #059669); }
+    
+    /* UPDATED NAV BUTTON STYLES FOR WHITE SIDEBAR */
+    .nav-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        transition: all 0.15s ease;
+        color: #64748b; /* Slate 500 */
+        font-weight: 500;
+    }
+    
+    .nav-btn:hover {
+        background: #f1f5f9; /* Slate 100 */
+        color: #0f172a; /* Slate 900 */
+    }
+    
+    .nav-btn.active {
+        background: #ecfdf5; /* Emerald 50 */
+        color: #059669; /* Emerald 600 */
+        font-weight: 600;
+    }
+ 
+    .replica-card {
+        background: white;
+        border-radius: 2rem;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+ 
+    .hims-input {
+        width: 100%; padding: 0.75rem 1rem; background: #ffffff; border: 1px solid #e2e8f0;
+        border-radius: 0.75rem; font-size: 0.875rem; transition: all 0.2s; outline: none;
+    }
+    .hims-input:focus { border-color: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+    
+    .hims-input:disabled {
+        background-color: #f8fafc;
+        color: #64748b;
+        cursor: not-allowed;
+        border-color: #e2e8f0;
+    }
+  </style>
+</head>
+<body class="flex min-h-screen">
+ 
+<header id="mobileHeader" class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 z-30 lg:hidden">
+  <a href="#" class="flex items-center gap-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500">
+    <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center">
+      <i data-lucide="shield" class="w-5 h-5 text-white"></i>
+    </div>
+    <span class="text-lg font-bold text-gray-900">HIMS Agent</span>
+  </a>
+  <button onclick="toggleSidebar(true)" class="p-2 rounded-lg hover:bg-gray-100"><i data-lucide="menu" class="w-6 h-6"></i></button>
+</header>
+ 
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleSidebar(false)"></div>
+ 
+<aside id="agentSidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col z-50 transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0">
+  <div class="p-6 flex items-center gap-3">
+    <div class="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
+      <i data-lucide="shield" class="text-white"></i>
+    </div>
+    <div>
+      <h1 class="font-bold leading-tight text-slate-900">GENC HIMS</h1>
+      <p class="text-xs text-slate-500">Agent Portal</p>
+    </div>
+    <button onclick="toggleSidebar(false)" class="lg:hidden ml-auto p-2 rounded-lg hover:bg-slate-100">
+      <i data-lucide="x" class="w-5 h-5"></i>
+    </button>
+  </div>
+ 
+  <nav class="px-4 space-y-1 flex-1">
+    <a th:href="@{/agent/dashboard}" class="nav-btn"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a th:href="@{/agent/policies}" class="nav-btn"><i data-lucide="file-text"></i> Policies</a>
+    <a th:href="@{/agent/claims}" class="nav-btn active"><i data-lucide="clipboard-list"></i> Claims</a>
+    <a th:href="@{/agent/customers}" class="nav-btn"><i data-lucide="users"></i> Customers</a>
+    <a th:href="@{/agent/support}" class="nav-btn"><i data-lucide="headphones"></i> Support</a>
+    <a th:href="@{/agent/profile}" class="nav-btn"><i data-lucide="user"></i> Profile</a>
+  </nav>
+ 
+  <div class="p-4 border-t border-slate-100">
+    <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 font-semibold transition-colors">
+      <i data-lucide="log-out"></i>Logout
+    </button>
+  </div>
+</aside>
+ 
+<main class="ml-64 flex-1 p-8">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-slate-900">Claims Management</h1>
+      <p class="text-muted">View customer claim history</p>
+    </div>
+    <button onclick="location.reload()" class="px-4 py-2 border border-slate-200 rounded-xl flex items-center gap-2 hover:bg-slate-50 transition-all font-medium text-slate-600">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh
+    </button>
+  </div>
+ 
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div onclick="filterByStatus('PENDING')" class="bg-card rounded-2xl border border-slate-200 p-6 cursor-pointer hover:shadow-md transition-all">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pending Review</p>
+      <p class="text-3xl font-bold text-amber-500" th:text="${statPending}">0</p>
+    </div>
+    <div onclick="filterByStatus('APPROVED')" class="bg-card rounded-2xl border border-slate-200 p-6 cursor-pointer hover:shadow-md transition-all">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Approved Claims</p>
+      <p class="text-3xl font-bold text-emerald-500" th:text="${statApproved}">0</p>
+    </div>
+    <div onclick="filterByStatus('REJECTED')" class="bg-card rounded-2xl border border-slate-200 p-6 cursor-pointer hover:shadow-md transition-all">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rejected Claims</p>
+      <p class="text-3xl font-bold text-red-500" th:text="${statRejected}">0</p>
+    </div>
+  </div>
+ 
+  <div class="relative mb-6">
+    <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
+    <input type="text" id="claimSearch" oninput="filterClaims()" placeholder="Search claims by ID, Holder, or Policy Number..."
+           class="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200 bg-card outline-none focus:ring-4 focus:ring-blue-500/10 transition-all" />
+  </div>
+ 
+  <div class="bg-card rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <table class="w-full border-collapse">
+      <thead>
+    <tr class="text-left border-b border-slate-100 bg-slate-50/50">
+        <th class="px-6 py-4">
+            <a th:href="@{/agent/claims(page=${currentPage}, sortField='id', sortDir=${reverseSortDir})}" class="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-emerald-600">
+                Claim Info <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+            </a>
+        </th>
+        <th class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Holder</th>
+        <th class="px-6 py-4">
+            <a th:href="@{/agent/claims(page=${currentPage}, sortField='requestedAmount', sortDir=${reverseSortDir})}" class="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-emerald-600">
+                Req. Amount <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+            </a>
+        </th>
+        <th class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Settled Amount</th>
+        <th class="px-6 py-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
+        <th class="px-6 py-4">
+            <a th:href="@{/agent/claims(page=${currentPage}, sortField='claimDate', sortDir=${reverseSortDir})}" class="flex items-center gap-1 text-[11px] font-bold text-slate-400 uppercase tracking-widest hover:text-emerald-600">
+                Date <i data-lucide="arrow-up-down" class="w-3 h-3"></i>
+            </a>
+        </th>
+    </tr>
+</thead>
+      <tbody class="divide-y divide-slate-50" id="claimsTableBody">
+        <tr th:each="c : ${claims}" class="hover:bg-slate-50/50 transition-colors claim-row"
+            th:data-status="${c.claimStatus}">
+            
+            <td class="px-6 py-5">
+                <p class="font-mono text-xs font-bold text-blue-600" th:text="${'CLM-' + c.id}">ID</p>
+                <p class="text-[10px] text-slate-400">
+                    <span th:if="${c.policy != null}" th:text="${c.policy.policyNumber}">POLICY</span>
+                    <span th:if="${c.policy == null}" class="text-red-400 italic">No Policy</span>
+                </p>
+            </td>
+ 
+            <td class="px-6 py-5">
+                <p class="font-semibold text-slate-900">
+                    <span th:if="${c.policy != null and c.policy.user != null}" th:text="${c.policy.user.username}">Holder</span>
+                    <span th:unless="${c.policy != null and c.policy.user != null}" class="text-slate-400 italic">No Holder</span>
+                </p>
+            </td>
+ 
+            <td class="px-6 py-5">
+                <p class="font-medium text-slate-600"
+                   th:text="${'₹ ' + (c.requestedAmount != null ? c.requestedAmount : c.claimAmount)}">₹0.00</p>
+            </td>
+ 
+            <td class="px-6 py-5">
+                <div th:if="${c.claimStatus == 'APPROVED'}">
+                    <span class="text-xs font-bold text-emerald-600">
+                        <span th:text="${'₹ ' + c.claimAmount}">₹0.00</span>
+                    </span>
+                </div>
+                <div th:if="${c.claimStatus == 'REJECTED'}">
+                    <span class="text-xs font-bold text-red-600">₹ 0.00</span>
+                </div>
+                <div th:if="${c.claimStatus == 'PENDING'}">
+                    <span class="text-[10px] text-slate-400 italic">--</span>
+                </div>
+            </td>
+ 
+            <td class="px-6 py-5">
+                <span th:classappend="${c.claimStatus == 'PENDING' ? 'bg-amber-100 text-amber-600' : c.claimStatus == 'APPROVED' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}"
+                      class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest" th:text="${c.claimStatus}">STATUS</span>
+            </td>
+ 
+            <td class="px-6 py-5 text-sm text-slate-500">
+                <span th:text="${c.claimDate != null ? #temporals.format(c.claimDate, 'MMM dd, yyyy') : 'No Date'}">Date</span>
+            </td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <div th:if="${claims == null or claims.size() == 0}" class="py-20 text-center">
+      <i data-lucide="clipboard-list" class="w-12 h-12 text-slate-200 mx-auto mb-4"></i>
+      <p class="text-slate-500 font-medium">No claims available for review.</p>
+    </div>
+  </div>
+ 
+  <div th:if="${totalPages > 0}"
+     style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: space-between; background: white; padding: 1.25rem 2rem; border-radius: 2rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    
+    <span style="font-size: 14px; font-weight: 500; color: #64748b;">
+        Page <strong th:text="${currentPage + 1}" style="color: #10b981;">1</strong> of <span th:text="${totalPages}" style="font-weight: 700; color: #1e293b;">1</span>
+    </span>
+    
+    <div style="display: flex; gap: 8px; align-items: center;">
+        <a th:if="${currentPage > 0}"
+           th:href="@{/agent/claims(page=${currentPage - 1}, sortField=${sortField}, sortDir=${sortDir})}"
+           style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; transition: all 0.2s;"
+           onmouseover="this.style.backgroundColor='#ecfdf5'; this.style.color='#10b981'; this.style.borderColor='#d1fae5';"
+           onmouseout="this.style.backgroundColor='#f8fafc'; this.style.color='#64748b'; this.style.borderColor='#e2e8f0';">
+           <i data-lucide="chevron-left" style="width: 18px; height: 18px;"></i>
+        </a>
+ 
+        <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+           th:href="@{/agent/claims(page=${i}, sortField=${sortField}, sortDir=${sortDir})}"
+           th:text="${i + 1}"
+           th:style="${currentPage == i ? 'width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: #10b981; color: white; border: 1px solid #10b981; font-weight: 700; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);' : 'width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: white; color: #64748b; border: 1px solid #e2e8f0; font-weight: 600; font-size: 14px; transition: all 0.2s;'}"
+           onmouseover="if(this.style.backgroundColor !== 'rgb(16, 185, 129)') { this.style.backgroundColor='#f8fafc'; this.style.color='#10b981'; }"
+           onmouseout="if(this.style.backgroundColor !== 'rgb(16, 185, 129)') { this.style.backgroundColor='white'; this.style.color='#64748b'; }">
+        </a>
+ 
+        <a th:if="${currentPage < totalPages - 1}"
+           th:href="@{/agent/claims(page=${currentPage + 1}, sortField=${sortField}, sortDir=${sortDir})}"
+           style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; transition: all 0.2s;"
+           onmouseover="this.style.backgroundColor='#ecfdf5'; this.style.color='#10b981'; this.style.borderColor='#d1fae5';"
+           onmouseout="this.style.backgroundColor='#f8fafc'; this.style.color='#64748b'; this.style.borderColor='#e2e8f0';">
+           <i data-lucide="chevron-right" style="width: 18px; height: 18px;"></i>
+        </a>
+    </div>
+</div>
+</main>
+ 
+<script>
+    function toggleSidebar(show) {
+        const sidebar = document.getElementById('agentSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (show) {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        } else {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+    }
+ 
+    function filterClaims() {
+        const searchTerm = (document.getElementById('claimSearch').value || '').toLowerCase();
+        const rows = document.querySelectorAll('.claim-row');
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    }
+ 
+    function filterByStatus(status) {
+        const rows = document.querySelectorAll('.claim-row');
+        rows.forEach(row => {
+            const rowStatus = row.getAttribute('data-status');
+            if (status === 'ALL' || rowStatus === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+ 
+    function logout() {
+        window.location.href = '/logout';
+    }
+ 
+    document.addEventListener('DOMContentLoaded', function(){
+        lucide.createIcons();
+    });
+</script>
+</body>
+</html>

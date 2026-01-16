@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Error</title>
+     <link rel="icon" href="/assets/logo.jpeg" type="image/svg+xml">
+</head>
+<body>
+    <div style="color: red; text-align: center; margin-top: 50px;">
+        <h1>Something went wrong</h1>
+        <h3 th:text="${error}">Error details</h3>
+        <a th:href="@{/admin/users}">Go Back</a>
+    </div>
+</body>
+</html>

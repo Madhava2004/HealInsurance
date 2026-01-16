@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Support – Admin Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/assets/logo.jpeg" type="image/svg+xml">
+ 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+ 
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sidebar: "#0f172a",
+            bg: "#f8fafc",
+            card: "#ffffff",
+            border: "#e5e7eb",
+            muted: "#64748b",
+          }
+        }
+      }
+    }
+  </script>
+ 
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-primary { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+    
+    .card-replica {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 2rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+    }
+    .kpi-hover:hover {
+        transform: translateY(-5px);
+        border-color: #3b82f6;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .status-pill {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+    }
+    .btn-blue-gradient {
+        background: linear-gradient(to right, #2563eb, #3b82f6);
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+    }
+    .modal-backdrop {
+        background-color: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(8px);
+    }
+  </style>
+</head>
+ 
+<body class="bg-bg flex">
+ 
+<aside class="fixed inset-y-0 left-0 w-64 bg-sidebar text-white flex flex-col z-40">
+  <div class="p-6 flex items-center gap-3">
+    <div class="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
+      <i data-lucide="shield"></i>
+    </div>
+    <div>
+      <h1 class="font-bold leading-tight">GENC HIMS</h1>
+      <p class="text-xs text-white/60">Admin Portal</p>
+    </div>
+  </div>
+ 
+  <nav class="px-4 space-y-1 flex-1">
+    <button onclick="go('/admin/dashboard')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="layout-dashboard"></i> Dashboard
+    </button>
+    <button onclick="go('/admin/users')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="users"></i> Users
+    </button>
+    <button onclick="go('/admin/policies')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="file-text"></i> Policies
+    </button>
+    <button onclick="go('/admin/claims')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="clipboard-list"></i> Claims
+    </button>
+    <button class="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 transition">
+      <i data-lucide="headphones"></i> Support
+    </button>
+    <button onclick="go('/admin/analytics')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="bar-chart-3"></i> Analytics
+    </button>
+    <button onclick="go('/admin/profile')" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition">
+      <i data-lucide="user"></i> Profile
+    </button>
+  </nav>
+ 
+  <div class="p-4 border-t border-white/10">
+    <button onclick="logout()" class="w-full flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-500/10 font-semibold transition">
+      <i data-lucide="log-out"></i>Logout
+    </button>
+  </div>
+</aside>
+ 
+ 
+<main class="ml-64 flex-1 p-8">
+<div th:if="${success}" class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl flex items-center gap-3">
+    <i data-lucide="check-circle" class="w-5 h-5"></i>
+    <span class="text-sm font-bold" th:text="${success}"></span>
+</div>
+<div th:if="${error}" class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl flex items-center gap-3">
+    <i data-lucide="alert-circle" class="w-5 h-5"></i>
+    <span class="text-sm font-bold" th:text="${error}"></span>
+</div>
+  <header class="mb-8">
+    <h1 class="text-3xl font-bold text-slate-900 mb-2">Support Management</h1>
+    <p class="text-slate-500 font-medium tracking-tight">Global view of all customer support requests</p>
+  </header>
+ 
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10 text-center">
+    <div class="card-replica kpi-hover p-6">
+        <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="clock" class="w-5 h-5"></i></div>
+        <div class="text-2xl font-bold text-amber-600" th:text="${openCount}">0</div>
+        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Open</p>
+    </div>
+    <div class="card-replica kpi-hover p-6">
+        <div class="w-10 h-10 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="alert-circle" class="w-5 h-5"></i></div>
+        <div class="text-2xl font-bold text-red-600" th:text="${highPriorityCount}">0</div>
+        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">High Priority</p>
+    </div>
+    <div class="card-replica kpi-hover p-6">
+        <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="check-circle" class="w-5 h-5"></i></div>
+        <div class="text-2xl font-bold text-emerald-600" th:text="${resolvedCount}">0</div>
+        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Resolved</p>
+    </div>
+    <div class="card-replica kpi-hover p-6">
+        <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="layers" class="w-5 h-5"></i></div>
+        <div class="text-2xl font-bold text-blue-600" th:text="${#lists.size(tickets)}">0</div>
+        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Total Tickets</p>
+    </div>
+  </div>
+ 
+  <div class="flex flex-col sm:flex-row gap-4 mb-8">
+    <div class="relative flex-1 max-w-md">
+        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+        <input type="text" id="ticketSearch" oninput="filterTickets()" placeholder="Search by ID, User, or Subject..."
+               class="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500/20 shadow-sm">
+    </div>
+    
+    <div class="relative w-full sm:w-48">
+        <select id="priorityFilter" onchange="filterTickets()"
+                class="w-full appearance-none bg-white border border-slate-200 rounded-2xl pl-6 pr-10 py-3.5 text-sm font-bold text-slate-600 outline-none cursor-pointer shadow-sm">
+            <option value="all">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+        </select>
+        <i data-lucide="chevron-down" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+    </div>
+</div>
+ 
+<div class="card-replica overflow-hidden mb-10 border-none shadow-xl">
+    <table class="w-full border-collapse table-fixed">
+        <colgroup>
+            <col class="w-[10%]"> <col class="w-[20%]"> <col class="w-[30%]"> <col class="w-[15%]"> <col class="w-[15%]"> <col class="w-[10%]"> </colgroup>
+        <thead>
+            <tr class="bg-slate-50/80 border-b border-slate-100">
+                <th class="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-left">ID</th>
+                <th class="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-left">Customer</th>
+                <th class="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-left">Subject</th>
+                <th class="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Priority</th>
+                <th class="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">Status</th>
+                <th class="px-4 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Action</th>
+            </tr>
+        </thead>
+        <tbody id="tickets-body" class="divide-y divide-slate-50 text-sm font-medium">
+            <tr th:each="t : ${tickets}" class="hover:bg-blue-50/30 transition-colors ticket-row group"
+                th:data-priority="${t.priority != null ? t.priority.toLowerCase() : ''}"
+                th:data-search="${(t.user != null ? t.user.username.toLowerCase() : '') + ' ' + t.id + ' ' + (t.subject != null ? t.subject.toLowerCase() : '')}">
+                
+                <td class="px-4 py-5 font-mono text-slate-400 font-bold text-xs" th:text="${'TKT-' + t.id}"></td>
+                
+                <td class="px-4 py-5">
+                    <span class="font-bold text-slate-900 truncate block" th:text="${t.user != null ? t.user.username : 'Unknown'}"></span>
+                </td>
+                
+                <td class="px-4 py-5">
+                    <div class="text-slate-500 truncate font-normal w-full" th:text="${t.subject}"></div>
+                </td>
+                
+                <td class="px-4 py-5 text-center">
+                    <span class="status-pill inline-block whitespace-nowrap"
+                          th:classappend="${t.priority == 'High' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}"
+                          th:text="${t.priority}"></span>
+                </td>
+                
+                <td class="px-4 py-5 text-center">
+                    <span class="status-pill inline-block whitespace-nowrap"
+                          th:classappend="${t.ticketStatus == 'OPEN' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}"
+                          th:text="${t.ticketStatus}"></span>
+                </td>
+                
+                <td class="px-4 py-5 text-right">
+                    <button th:attr="onclick='openTicketModal(\'' + ${t.id} + '\', \'' + ${t.user?.username ?: 'Unknown'} + '\', \'' + ${t.user?.email ?: ''} + '\', \'' + ${#temporals.format(t.createdDate, 'yyyy-MM-dd')} + '\', \'' + ${t.subject} + '\', \'' + ${t.issueDescription} + '\', \'' + ${t.priority.toUpperCase()} + '\', \'' + ${t.ticketStatus.toUpperCase()} + '\')'"
+                            class="p-2.5 bg-slate-100 text-slate-400 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</main>
+ 
+<div id="ticketModal" class="fixed inset-0 hidden modal-backdrop items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-lg rounded-[32px] shadow-2xl relative overflow-hidden">
+        <button onclick="closeModal()" class="absolute top-6 right-6 text-slate-300 hover:text-slate-600 z-20">
+            <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+        <div class="p-10">
+            <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">Ticket Lifecycle</h3>
+ 
+            <div class="flex justify-between items-start mb-8 tracking-tighter">
+                <span id="m-id" class="text-xl font-bold font-mono text-slate-900 uppercase"></span>
+                <div class="flex gap-2">
+                    <span id="m-priority" class="status-pill"></span>
+                    <span id="m-status" class="status-pill uppercase"></span>
+                </div>
+            </div>
+ 
+            <div class="grid grid-cols-2 gap-y-6 mb-8 border-b border-slate-50 pb-8">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Customer</p>
+                    <p id="m-name" class="font-bold text-slate-900 text-sm"></p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Email</p>
+                    <p id="m-email" class="font-bold text-slate-900 text-sm truncate"></p>
+                </div>
+            </div>
+ 
+            <div class="mb-8">
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Subject</p>
+                <p id="m-subject" class="font-bold text-slate-900 text-sm mb-4"></p>
+                
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Issue Description</p>
+                <div id="m-message" class="text-sm bg-slate-50 p-4 rounded-2xl text-slate-600 border border-slate-100 italic"></div>
+            </div>
+ 
+            <div id="action-area">
+                <form th:action="@{/admin/support/submit-response}" method="POST" class="space-y-6">
+                    <input type="hidden" name="ticketId" id="modal-ticket-id-hidden">
+                    <div class="space-y-2">
+                        <p class="text-[11px] font-bold text-slate-900 uppercase">Official Response</p>
+                        <textarea name="message" id="response-input" rows="3" required
+                                  class="w-full border border-slate-200 rounded-2xl p-4 text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
+                                  placeholder="Type reply to customer..."></textarea>
+                    </div>
+                    <div class="flex gap-4">
+                        <button type="submit" class="flex-1 btn-blue-gradient text-white font-bold py-4 rounded-2xl text-[13px] flex items-center justify-center gap-2">
+                            <i data-lucide="send" class="w-4 h-4"></i> Send Reply
+                        </button>
+                        <button type="button" onclick="submitResolve()" class="flex-1 bg-white border border-slate-200 text-slate-600 font-bold py-4 rounded-2xl text-[13px] hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i> Resolve
+                        </button>
+                    </div>
+                </form>
+            </div>
+ 
+            <div id="resolved-view" class="hidden flex flex-col items-center justify-center py-6 bg-emerald-50 rounded-3xl border border-emerald-100">
+                <div class="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mb-3">
+                    <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                </div>
+                <p class="text-emerald-700 font-bold text-sm uppercase tracking-widest">
+                    This ticket is resolved and closed.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+ 
+<script>
+  lucide.createIcons();
+ 
+  function openTicketModal(id, name, email, date, subject, message, priority, status) {
+	    document.getElementById('modal-ticket-id-hidden').value = id;
+	    document.getElementById('m-id').innerText = 'TKT-' + id;
+	    document.getElementById('m-name').innerText = name;
+	    document.getElementById('m-email').innerText = email;
+	    document.getElementById('m-subject').innerText = subject;
+	    document.getElementById('m-message').innerText = message;
+ 
+	    // Style Badges
+	    const pBadge = document.getElementById('m-priority');
+	    pBadge.innerText = priority;
+	    pBadge.className = "status-pill " + (priority === 'HIGH' ? "bg-red-100 text-red-600" : "bg-blue-100 text-blue-600");
+ 
+	    const sBadge = document.getElementById('m-status');
+	    sBadge.innerText = status;
+	    sBadge.className = "status-pill " + (status === 'OPEN' ? "bg-amber-100 text-amber-600" : "bg-emerald-100 text-emerald-600");
+ 
+	    // TOGGLE VISIBILITY:
+	    // If RESOLVED, hide the form (action-area) and show the success view (resolved-view)
+	    const isResolved = (status === 'RESOLVED');
+	    document.getElementById('action-area').classList.toggle('hidden', isResolved);
+	    document.getElementById('resolved-view').classList.toggle('hidden', !isResolved);
+ 
+	    document.getElementById('ticketModal').classList.replace('hidden', 'flex');
+	    document.body.style.overflow = 'hidden';
+	}
+ 
+  function submitResolve() {
+    const id = document.getElementById('modal-ticket-id-hidden').value;
+    if(confirm('Close this ticket?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/support/' + id + '/resolve';
+        document.body.appendChild(form);
+        form.submit();
+    }
+  }
+ 
+  function closeModal() {
+    document.getElementById('ticketModal').classList.replace('flex', 'hidden');
+    document.body.style.overflow = 'auto';
+  }
+ 
+  function filterTickets() {
+    const search = document.getElementById('ticketSearch').value.toLowerCase();
+    const priority = document.getElementById('priorityFilter').value.toLowerCase();
+    document.querySelectorAll('.ticket-row').forEach(row => {
+        const text = row.getAttribute('data-search') || "";
+        const rowPriority = row.getAttribute('data-priority') || "";
+        const matchSearch = text.includes(search);
+        const matchPriority = priority === 'all' || rowPriority === priority;
+        row.style.display = (matchSearch && matchPriority) ? '' : 'none';
+    });
+  }
+ 
+  function go(url) { window.location.href = url; }
+  function logout() { location.href = '/logout'; }
+</script>
+ 
+</body>
+</html>
